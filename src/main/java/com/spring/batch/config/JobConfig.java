@@ -15,14 +15,14 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.infrastructure.item.ItemReader;
 import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import javax.sql.DataSource;
 /**
  * Configuración avanzada de Spring Batch 6 para un Job completo con:
  * - Steps condicionales
@@ -138,4 +138,6 @@ public class JobConfig {
     public LoggingListeners loggingListeners() {
         return new LoggingListeners();
     }
+
+
 }

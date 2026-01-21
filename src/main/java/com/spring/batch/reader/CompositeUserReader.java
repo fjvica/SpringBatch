@@ -4,11 +4,10 @@ import com.spring.batch.model.User;
 import org.springframework.batch.infrastructure.item.ItemReader;
 import org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader;
 import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -19,44 +18,46 @@ import java.util.List;
  * En Spring Batch 6 ya no existe CompositeItemReader.setDelegates(),
  * por lo que la lógica de combinación se implementa manualmente.
  */
-@Configuration
-public class CompositeUserReader {
+@Component
+public class CompositeUserReader implements ItemReader<User> {
 
-    @Bean
-    public ItemReader<User> compositeUserReader(
-            FlatFileItemReader<User> csvReader,
-            JdbcCursorItemReader<User> dbReader) {
+    private final FlatFileItemReader<User> csvReader;
+    private final JdbcCursorItemReader<User> dbReader;
 
-        return new ItemReader<>() {
-            private Iterator<User> iterator; // iterador interno de los usuarios combinados
+    private Iterator<User> iterator; // iterador interno de los usuarios combinados
 
-            @Override
-            public User read() throws Exception {
-                // La primera vez que se llama, se cargan los datos desde ambas fuentes
-                if (iterator == null) {
-                    List<User> combined = new LinkedList<>();
+    public CompositeUserReader(FlatFileItemReader<User> csvReader,
+                               JdbcCursorItemReader<User> dbReader) {
+        this.csvReader = csvReader;
+        this.dbReader = dbReader;
+    }
 
-                    // 1️⃣ Leer todos los usuarios desde el CSV
-                    User csvUser;
-                    while ((csvUser = csvReader.read()) != null) {
-                        combined.add(csvUser);
-                    }
+    @Override
+    public User read() throws Exception {
+        // Inicializamos iterator si es null
+        if (iterator == null) {
+            List<User> combined = new ArrayList<>();
 
-                    // 2️⃣ Leer todos los usuarios desde la base de datos
-                    User dbUser;
-                    while ((dbUser = dbReader.read()) != null) {
-                        combined.add(dbUser);
-                    }
-
-                    // 3️⃣ Crear iterador para recorrer ambos conjuntos como una sola fuente
-                    iterator = combined.iterator();
-                }
-
-                // 4️⃣ Devolver un usuario en cada llamada, o null si se terminó
-                return iterator.hasNext() ? iterator.next() : null;
+            // Leemos todos los usuarios del CSV
+            User item;
+            csvReader.open(null); // ExecutionContext nulo en este ejemplo
+            while ((item = csvReader.read()) != null) {
+                combined.add(item);
             }
-        };
+            csvReader.close();
+
+            // Leemos todos los usuarios de la BD
+            dbReader.open(null);
+            while ((item = dbReader.read()) != null) {
+                combined.add(item);
+            }
+            dbReader.close();
+
+            // Creamos iterador
+            iterator = combined.iterator();
+        }
+
+        // Devolvemos siguiente elemento o null si no hay más
+        return iterator.hasNext() ? iterator.next() : null;
     }
 }
-
-

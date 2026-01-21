@@ -1,29 +1,32 @@
 package com.spring.batch.writer;
 
 import com.spring.batch.model.User;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
-import org.springframework.batch.infrastructure.item.support.CompositeItemWriter;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
- * Writer que combina múltiples destinos de salida.
- * En este ejemplo:
- *  - Archivo de texto
- *  - Base de datos
+ * Writer compuesto que escribe usuarios en múltiples destinos (archivo y DB)
+ * usando Spring Batch 6, que requiere write(Chunk<? extends T>).
  */
-@Configuration
-public class CompositeUserWriter {
+@Component
+public class CompositeUserWriter implements ItemWriter<User> {
 
-    @Bean
-    public CompositeItemWriter<User> compositeUserWriter(
-            FlatFileItemWriter<User> fileWriter,
-            JdbcBatchItemWriter<User> dbWriter) {
-        CompositeItemWriter<User> writer = new CompositeItemWriter<>();
-        writer.setDelegates(List.of(fileWriter, dbWriter));
-        return writer;
+    private final FlatFileItemWriter<User> fileWriter;
+    private final JdbcBatchItemWriter<User> dbWriter;
+
+    public CompositeUserWriter(FlatFileItemWriter<User> fileWriter,
+                               JdbcBatchItemWriter<User> dbWriter) {
+        this.fileWriter = fileWriter;
+        this.dbWriter = dbWriter;
+    }
+
+    @Override
+    public void write(Chunk<? extends User> chunk) throws Exception {
+        // Pasamos directamente el Chunk a cada writer
+        fileWriter.write(chunk); // ahora es correcto
+        dbWriter.write(chunk);   // también correcto
     }
 }

@@ -1,3 +1,15 @@
 spring:
   application:
     name: batch
+
+  main:
+    allow-bean-definition-overriding: true
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,batch
+    endpoint:
+      batch:
+        enabled: true
