@@ -15,7 +15,7 @@ import javax.sql.DataSource;
 public class DbUserWriter {
 
     @Bean
-    public JdbcBatchItemWriter<User> dbUserWriter(DataSource dataSource) {
+    public JdbcBatchItemWriter<User> dbInsertUserWriter(DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<User>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO processed_users (id, name, email, active) VALUES (:id, :name, :email, :active)")

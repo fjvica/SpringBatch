@@ -22,7 +22,7 @@ public class FileUserWriter {
      * @return FlatFileItemWriter<User> configurado con recurso, codificación y agregador de líneas
      */
     @Bean
-    public FlatFileItemWriter<User> fileUserWriter() {
+    public FlatFileItemWriter<User> fileInsertUserWriter() {
         return new FlatFileItemWriterBuilder<User>()
                 .name("fileUserWriter") // nombre interno del writer
                 .resource(new FileSystemResource("output/processed_users.txt")) // archivo destino
